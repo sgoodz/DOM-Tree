@@ -1,35 +1,41 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+// src/App.tsx
+
+import React, { useState } from "react";
+import { parseDocument } from "htmlparser2";
+import { TreeNode, Node } from "./components/Tree";
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [domStructure, setDomStructure] = useState<Node | null>(null);
+  const [url, setUrl] = useState<string>("");
+
+  const fetchHtml = async () => {
+    try {
+      const response = await fetch(
+        `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`
+      );
+      const data = await response.json();
+      const parsedDocument = parseDocument(data.contents) as unknown as Node;
+      setDomStructure(parsedDocument);
+    } catch (error) {
+      console.error("Error fetching HTML:", error);
+    }
+  };
 
   return (
-    <>
+    <div>
+      <input
+        type="text"
+        placeholder="Enter website URL"
+        value={url}
+        onChange={(e) => setUrl(e.target.value)}
+      />
+      <button onClick={fetchHtml}>Fetch HTML</button>
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <h3>HTML Structure</h3>
+        {domStructure && <TreeNode node={domStructure} />}
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+    </div>
+  );
 }
 
-export default App
+export default App;
